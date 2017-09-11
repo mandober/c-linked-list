@@ -1,0 +1,24 @@
+#!/bin/bash
+#=========================================================================
+# FILE: import
+#=========================================================================
+
+unset BFx
+declare -A BFx
+
+# style
+BFx[off]="\e[m"
+BFx[dim]="\e[2m"
+
+# colors
+BFx[green]="\e[32m"
+BFx[red]="\e[35m"
+
+# symbols
+BFx[ok]="✔"
+BFx[err]="✗"
+
+# stdin connected to tty
+[[ -t 0 ]] && BFx[stdin]=1 || BFx[stdin]=0
+# stdout connected to tty
+[[ -t 1 ]] && BFx[stdout]=1 || BFx[stdout]=0

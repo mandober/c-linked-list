@@ -1,8 +1,8 @@
 /*
-
   LINKED LIST
   Stack implemented with a linked list.
 
+  stack.c
 */
 #include <stdio.h>
 #include <stdbool.h>
@@ -24,7 +24,7 @@ struct list_s;
 typedef struct node_s Node;
 typedef struct list_s List;
 
-// function prototypes (param names may be omitted)
+// function prototypes
 Node* node_new(Node* next, i32 item);
 Node* node_drop(Node* node);
 List  list_new();
@@ -48,8 +48,7 @@ struct node_s {
 
 /*
   List itself is stored on the stack.
-  It points to the first node and
-  manages nodes and quasi methods.
+  It points to the first node and manages nodes and quasi methods.
 */
 struct list_s {
   Node *head;
@@ -224,7 +223,6 @@ List* list_print(List* list) {
 
 
 
-
 // ===================================================== MAIN
 int main() {
   // new: list, list ref
@@ -261,4 +259,4 @@ int main() {
 }
 
 
-// ===================================================== TEST
+// ===================================================== TESTS

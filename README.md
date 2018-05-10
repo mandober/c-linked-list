@@ -31,6 +31,7 @@ These macro definitions are for easing the conversion of this implementation for
 
 
 ### Node
+
 - `struct node_s`
 - typedef: `Node`
 - fields:
@@ -40,14 +41,18 @@ These macro definitions are for easing the conversion of this implementation for
 
 ```c
 struct node_s {
-  Node *next; // 8
-  i32   item; // 4
-  i32   hits; // 4
+  Node *next; // 8B
+  i32   item; // 4B
+  i32   hits; // 4B
 };
 ```
 
+Node struct has 3 fields (8, 4, 4 bytes), it is aligned on 16 bytes, no padding needed. Nodes are stored on the heap, so only a pointer to the node (8 bytes) is being passed around. The third field `hits` counts the number of times a node is accessed in order to implement move-to-front optimization.
+
+
 
 ### List
+
 - `struct list_s`
 - typedef: `List`
 - fields:
@@ -64,21 +69,39 @@ struct node_s {
 struct list_s {
   Node *head;
   usize length;
-  /* more fields elided */
+  usize (*len)(List*);
+  List *(*push)(List*, i32);
+  List *(*drop)(List*);
+  List *(*print)(List*);
+  i32   (*pop)(List*);
 };
 ```
 
+Although list struct has several fields, only a pointer to it is passed around, except on list creation by the `list_new` function that retururns a list by value. The list is stored on the stack.
+
 
 ## Quasi methods
-In order to have prettier call sites, the list maintains a collection of function pointers to functions whose parameter is a pointer to the list,`List*`,
+In order to have method-like calls, the list maintains a collection of function pointers to functions whose parameter is a pointer to the list,`List*`, which point to similarly named functions.
 
-Quasi methods are realized through the function pointers contained in the list struct's fields, which point to similarly named functions. Namely, the function, for example, `list_push`, that adds an element to the front of the list, is called as `list_push(&list, 5)`, but quasi methods allow for calls that resemble methods and that can be chained:
+Namely, the function, for example, `list_push`, that adds an element to the front of the list, called as `list_push(&list, 5)`, can now be called in method-like style, which also allows for call chaining:
 
 ```c
-// create new list, create a ref to the list
+// create new list `list`, declare ptr to the list, `self`
 List list = list_new(), *self = &list;
-// now with pointer to list named `self`, quasi methods look like:
+
+// so the calls can be:
 list.len(self);
-// and allow chaining
+
+// or:
 list.print(self)->push(self, 5)->push(self, 4)->push(self, 3)->print(self);
+```
+
+If list had a stable address (alloc), the list struct could also hold a pointer to it, which would allow ommitting the `self` parameter, but then the arrow operator would be mandatory everywhere.
+
+```c
+// with list on the stack
+list.len(self);
+
+// with list on the heap
+list->len();
 ```

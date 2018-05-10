@@ -1,6 +1,8 @@
 /*
+
   LINKED LIST
   Stack implemented with a linked list.
+
 */
 #include <stdio.h>
 #include <stdbool.h>

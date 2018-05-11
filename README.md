@@ -24,7 +24,9 @@ These macro definitions are for easing the conversion of this implementation for
 
 ```c
 #define usize size_t
+
 #define i32 int32_t
+
 #define NONE INT32_MAX
 ```
 
@@ -41,9 +43,9 @@ These macro definitions are for easing the conversion of this implementation for
 
 ```c
 struct node_s {
-  Node *next; // 8B
-  i32   item; // 4B
-  i32   hits; // 4B
+  Node *next; // 8B  \
+  i32   item; // 4B   > 16 Bytes
+  i32   hits; // 4B  /
 };
 ```
 
@@ -64,6 +66,7 @@ Node struct has 3 fields (8, 4, 4 bytes), it is aligned on 16 bytes, no padding 
   - `list_pop`  : `pop` method, `list.pop(self)`
   - `list_print`: `print` method, `list.print(self)`
   - `list_drop` : `drop` method, `list.drop(self)`
+
 
 ```c
 struct list_s {

@@ -4,36 +4,7 @@
 
   stack.c
 */
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <assert.h>
-#include <stdlib.h>
-
-// ====================================================== PROTOTYPES
-#define usize size_t
-#define i32 int32_t
-#define NONE INT32_MAX
-
-// forward declarations
-struct node_s;
-struct list_s;
-
-// aliases: bring identifiers from tag into ordinary namespace
-typedef struct node_s Node;
-typedef struct list_s List;
-
-// function prototypes
-Node* node_new(Node* next, i32 item);
-Node* node_drop(Node* node);
-List  list_new();
-i32   list_pop(List* list);
-usize list_len(List* list);
-List* list_drop(List* list);
-List* list_push(List* list, i32 item);
-List* list_print(List* list);
-
+#include "stack.h"
 
 // ====================================================== DECLARATIONS
 /*
@@ -52,13 +23,14 @@ struct node_s {
 */
 struct list_s {
   Node *head;
+  Node *tail;
   usize length;
   // quasi methods
   usize (*len)(List*);
   List *(*push)(List*, i32);
   List *(*drop)(List*);
   List *(*print)(List*);
-  i32   (*pop)(List*);
+  union Option (*pop)(List*);
 };
 
 
@@ -91,6 +63,7 @@ List list_new() {
   // Initialize new list
   List list = {
     .head   = NULL,
+    .tail   = NULL,
     .length = 0,
     .len    = list_len,
     .push   = list_push,
@@ -136,33 +109,11 @@ List* list_drop(List* list) {
   // take each node starting with head and call node_drop,
   // which drops the current and returns a ref to the next.
   Node *np = list->head;
-
   while(np != NULL) {
     np = node_drop(np);
   }
-
   list->head = NULL;
-
   return list;
-}
-
-// ===================================================== LIST POP
-/*
- * Removes the head node and returns its payload.
- *
- * @param   List*  list  Takes list reference.
- * @return  i32    Payload by value or NONE if list empty.
-*/
-i32 list_pop(List* list) {
-  if (list->head != NULL) {
-    // at least 1 node
-    i32 rv = list->head->item;
-    list->head = node_drop(list->head);
-    list->length--;
-    return rv;
-  }
-  // in-band signaling: no payload to return
-  return NONE;
 }
 
 // ===================================================== LIST PUSH
@@ -189,6 +140,49 @@ List* list_push(List* list, i32 item) {
   return list;
 }
 
+
+// ===================================================== LIST POP
+/*
+ * Removes the head node and returns its payload.
+ * Returns `union Option` whose member `ok` is the valid one
+ * if there is a payload to return. In case the list was empty
+ * the valid member of the union is `err` and it is NULL.
+ * It is mandatory to check returned value of this function
+ * before using it:
+ *
+ * ```c
+ * union Option result = list.pop(self);
+ *
+ * if (result.err != NULL) {
+ *     printf("ok: %d\n", result.ok);
+ * } else {
+ *     printf("error: the list is empty!\n");
+ * }
+ * ```
+ *
+ * @param   List*  list   Takes list reference.
+ * @return  union Option  Payload by value (ok) or NULL (err) on error.
+*/
+union Option list_pop(List* list) {
+  // define union
+  union Option out;
+  // set it to NULL
+  out.err = NULL;
+
+  if (list->head != NULL) {
+    // at least 1 node
+    i32 rv = list->head->item;
+    list->head = node_drop(list->head);
+    list->length--;
+    // set union to payload (i32)
+    out.ok = rv;
+  }
+
+  return out;
+}
+
+
+
 // ===================================================== LIST LEN
 /*
  * Get list's length.
@@ -209,15 +203,16 @@ usize list_len(List* list) {
 */
 List* list_print(List* list) {
   Node *np = list->head;
+  // enumerate nodes:
   i32 i = 1;
-
   printf("List: ");
+
   while(np != NULL) {
     printf("[%d: %d] -> ", i++, np->item);
     np = np->next;
   }
-  printf("NULL\n\n");
 
+  printf("NULL\n\n");
   return list;
 }
 
@@ -225,32 +220,21 @@ List* list_print(List* list) {
 
 // ===================================================== MAIN
 int main() {
-  // new: list, list ref
-  List list = list_new(), *self = &list;
-  assert(list.len(self) == 0);
+  // test it
+  test();
 
-  // push quasi method
-  list.push(self, 99);
-  assert(list.len(self) == 1);
+  // new
+  List list = list_new(), *self = &list;
 
   // quasi method chaining
-  list.push(self, 88)->push(self, 77)->push(self, 66)->print(self);
-
-  // len quasi method
+  list.push(self, 88)->push(self, 77)->push(self, 66)->print(self)->print(self);
   printf("List length: %zu\n", list.len(self));
 
-  // print quasi method
-  list.print(self);
-
-  // pop quasi method
-  i32 x;
-  while ( (x = list.pop(self)) != NONE ) {
-    printf("popped: %d\n", x);
-    list.print(self);
-  }
-
-  // drop quasi method
-  list.drop(self)->print(self)->push(self, 5)->push(self, 4)->print(self);
+  // pops
+  union Option result = list_pop(self);
+  (result.err != NULL)
+    ? printf("ok: %d\n", result.ok)
+    : printf("error\n");
 
 
 
@@ -260,3 +244,22 @@ int main() {
 
 
 // ===================================================== TESTS
+void test() {
+  List list = list_new();               // new
+  List *self = &list;
+  assert(list.len(self) == 0);
+
+  list.push(self, 99);                  // push
+  assert(list.len(self) == 1);
+
+  list.push(self, 88)->push(self, 77)->push(self, 66);
+  assert(list.len(self) == 4);
+
+  union Option result = list.pop(self); // pop
+  assert(result.ok == 66);
+  assert(list.len(self) == 3);
+
+  list.drop(self);                      // drop
+  assert(list.head == NULL);
+
+}

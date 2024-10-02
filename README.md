@@ -1,15 +1,52 @@
 # Linked List
 
-Stack implemented with a linked list.
+Generic implementation of a singly-linked list in C
 
 - name: c-linked-list
-- project: Linked lists in programming languages
-- category: data structures
 - lang: C
 - repo: https://github.com/mandober/c-linked-list.git
 
+## Concepts
 
-## Elements
+In generic programming, algorithms are written in terms of unspecified (or unknown) data types; types are specified later, usually on invocation. Generics pertain to functions and data structures. A generic data structure can hold the payload of different type; a generic function can work with many distinct types.
+
+When the set of such types includes any and all types of a language, then it is called *parameteric polymorphism*. Universal or parameteric polymorphism even gets us theorems for free (Theorems for free!, Philip Wadler, 1989 [tf]).
+
+
+
+
+that are then instantiated when needed for specific types provided as parameters. 
+
+Generics
+
+C has no *generics*, but we can emulate a resticted form of *polymorphism* using the **void pointer** (`void*`) to hold the payload. Just like in *universal polymorphism*, we cannot inspect such polymorphic payload.
+
+Universal polymorphism, also called parameteric polymorphism, works with truly generic data - a function or data structure that works with polymorphic value cannot do anything that depends on that value. That is, it can only do things that don't depend on the type of the value, whatever that type may be. Examplary parameterically polymorphic function is `identity` which can only return the received value; it cannot do anything else with it considering its type, `id : ∀a. a -> a`.
+
+This leads to the realization that the more generic a value is, the less we can do with it. The identity function can accept any conceivable type, past, present or future, but it cannot do very much with it. If all the types of a programmng language support the print method, then a proper polymorphic function can print the received value. Either that or it can only return it as is. The latter is true for languages that do not support printing functions; function types are usually the deal breaker like that. For example, C divides all its types into two groups: objects and function types [ct].
+
+
+[ct]: https://en.cppreference.com/w/c/language/type#Type_groups
+[tf]: https://dl.acm.org/doi/10.1145/99370.99404
+
+
+
+
+we can only do things that all the types have in common.
+
+The void pointer has the *universal pointer type* with regard to other pointers - it sits on top of the pointer type hierarchy because any typed pointer may be assigned to it.
+
+
+
+This assignment includes the *implicit pointer type conversion*, i.e. the type conversion of a typed pointer to a pointer of type void.
+
+The type T may be a base type or another pointer type - void pointer can hold any. Operationally, nothing happens when a pointer is assigned to a void pointer; the underlying data remains intact. And the same is true when we later assign the void pointer to a *typed pointer*.
+
+
+
+
+
+
 - Node: element of the list, holds a payload. Allocated on the heap
 - List: represents the list, manages its nodes. List is a struct on the stack.
 - Macros: misc. types grouped in one place (todo: explore genericity).

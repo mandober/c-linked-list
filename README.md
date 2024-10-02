@@ -1,58 +1,55 @@
-# Linked List
+# Generic Linked List
 
-Generic implementation of a singly-linked list in C
+C implementation of a generic singly-linked list relying on void pointers.
 
 - name: c-linked-list
+- desc: generic singly-linked list data structure
 - lang: C
 - repo: https://github.com/mandober/c-linked-list.git
 
 ## Concepts
 
-In generic programming, algorithms are written in terms of unspecified (or unknown) data types; types are specified later, usually on invocation. Generics pertain to functions and data structures. A generic data structure can hold the payload of different type; a generic function can work with many distinct types.
+Generics in C are realized with the help of void pointers (`void*`). Generics are a form of [polymorphism](./polymorphism).
 
-When the set of such types includes any and all types of a language, then it is called *parameteric polymorphism*. Universal or parameteric polymorphism even gets us theorems for free (Theorems for free!, Philip Wadler, 1989 [tf]).
+Generics primarily pertain to data structures, and then by extension, to functions that operate on them. 
 
+In generic programming, algorithms are written in terms of an unspecified type, a type that will be specified later. The type is not known at the time of implementation, but it will be known later, at the time of instantiation. 
 
+For a data structure to work over many different types, the type of the payload cannot be some concrete type (like `int`); instead, it is represented by a type parameter. A *type parameter* is placeholder for a type, just like a term-level variable is a placeholder for a value. When a generic data structure is *instantiated*, a concrete type replaces the corresponding type parameter.
 
+## Considerations
 
-that are then instantiated when needed for specific types provided as parameters. 
+Some things to consider when implementing support for polymorphism
+- type of polymorphism
+  - universal polymorphism
+  - ad hoc polymorphism
+    - enumeration polymorphism
+  - row polymorphism
+  - subtyping polymorphism
+- variance
+- instantiation
 
-Generics
+## Instantiation
 
-C has no *generics*, but we can emulate a resticted form of *polymorphism* using the **void pointer** (`void*`) to hold the payload. Just like in *universal polymorphism*, we cannot inspect such polymorphic payload.
+Instantiation of a generic data structure
+- monomorphism
 
-Universal polymorphism, also called parameteric polymorphism, works with truly generic data - a function or data structure that works with polymorphic value cannot do anything that depends on that value. That is, it can only do things that don't depend on the type of the value, whatever that type may be. Examplary parameterically polymorphic function is `identity` which can only return the received value; it cannot do anything else with it considering its type, `id : ∀a. a -> a`.
+*Monomorphism* is about creating as many concrete variants of a generic data structure as there are uses at different concrete types. If the user instantiates a generic list at the concrete type `Person`, then the compiler *monomorphizes the generic data structure*, creating a *concrete list implementation* in terms of the type `Person`, i.e. with `Person` as the type of payload. If the user instantiates a new list at the type `int` (it's always the bloody `int`, ain't it), then the compiler generates another implementation of list in terms of `int`.
 
-This leads to the realization that the more generic a value is, the less we can do with it. The identity function can accept any conceivable type, past, present or future, but it cannot do very much with it. If all the types of a programmng language support the print method, then a proper polymorphic function can print the received value. Either that or it can only return it as is. The latter is true for languages that do not support printing functions; function types are usually the deal breaker like that. For example, C divides all its types into two groups: objects and function types [ct].
+>Each time the user instantiates a generic data structure at some type, the compiler generates an implementation of that data structure in terms of that concrete type.
 
-
-[ct]: https://en.cppreference.com/w/c/language/type#Type_groups
-[tf]: https://dl.acm.org/doi/10.1145/99370.99404
-
-
-
-
-we can only do things that all the types have in common.
-
-The void pointer has the *universal pointer type* with regard to other pointers - it sits on top of the pointer type hierarchy because any typed pointer may be assigned to it.
-
-
-
-This assignment includes the *implicit pointer type conversion*, i.e. the type conversion of a typed pointer to a pointer of type void.
-
-The type T may be a base type or another pointer type - void pointer can hold any. Operationally, nothing happens when a pointer is assigned to a void pointer; the underlying data remains intact. And the same is true when we later assign the void pointer to a *typed pointer*.
+It is usually said that this approach can lead to code bloat with all the different implementations increasing code size, but that is not a valid point within the confines of C, cos it would be no different, code size-wise, if we coded all thoese variants ourselves. Alas, C doesn't support monomorphization, so you are hypothetically-complaining about the counterfactual code bloat just for the sake of complaining (l'snivelling pour l'snivelling).
 
 
 
-
-
+## Elements
 
 - Node: element of the list, holds a payload. Allocated on the heap
 - List: represents the list, manages its nodes. List is a struct on the stack.
 - Macros: misc. types grouped in one place (todo: explore genericity).
 
+## Macros
 
-### Macros
 These macro definitions are for easing the conversion of this implementation for another payload type.
 
 - `usize` is the type of list length.
@@ -121,6 +118,7 @@ Although list struct has several fields, only a pointer to it is passed around, 
 
 
 ## Quasi methods
+
 In order to have method-like calls, the list maintains a collection of function pointers to functions whose parameter is a pointer to the list,`List*`, which point to similarly named functions.
 
 Namely, the function, for example, `list_push`, that adds an element to the front of the list, called as `list_push(&list, 5)`, can now be called in method-like style, which also allows for call chaining:

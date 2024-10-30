@@ -1,38 +1,8 @@
 /*
-  LINKED LIST
-  Stack implemented with a linked list.
-
   stack.c
+  linked list: stack implemented with a linked list.
 */
 #include "stack.h"
-
-// ====================================================== DECLARATIONS
-/*
-  Node is an element of the list that carries a payload.
-  Nodes are stored on the heap.
-*/
-struct node_s {
-  Node *next; // 8
-  i32   item; // 4
-  i32   hits; // 4
-};
-
-/*
-  List itself is stored on the stack.
-  It points to the first node and manages nodes and quasi methods.
-*/
-struct list_s {
-  Node *head;
-  Node *tail;
-  usize length;
-  // quasi methods
-  usize (*len)(List*);
-  List *(*push)(List*, i32);
-  List *(*drop)(List*);
-  List *(*print)(List*);
-  union Option (*pop)(List*);
-};
-
 
 // ===================================================== NODE NEW
 /**
